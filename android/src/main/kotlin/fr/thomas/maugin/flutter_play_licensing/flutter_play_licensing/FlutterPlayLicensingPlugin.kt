@@ -271,7 +271,7 @@ val ByteArray.toHex
 val String.toHexByteArray
     inline get(): ByteArray? = try {
         chunked(2).map {
-            it.toUpperCase().toInt(16).toByte()
+            it.uppercase().toInt(16).toByte()
         }.toByteArray()
     } catch (e: Throwable) {
         null
