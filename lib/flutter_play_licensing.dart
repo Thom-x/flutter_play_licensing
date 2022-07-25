@@ -1,8 +1,34 @@
-
-import 'flutter_play_licensing_platform_interface.dart';
+import 'package:flutter/services.dart';
 
 class FlutterPlayLicensing {
-  Future<String?> getPlatformVersion() {
-    return FlutterPlayLicensingPlatform.instance.getPlatformVersion();
+  static const MethodChannel _channel = MethodChannel('flutter_play_licensing');
+
+  static Future<int> check({
+    /// In hex
+    /// Prefer to initialize PlayLicensing.salt in native
+    String? salt,
+
+    /// In base64
+    String? publicKey,
+  }) async {
+    final int reason = await _channel.invokeMethod('check', {
+      'salt': salt,
+      'publicKey': publicKey,
+    });
+    return reason;
+  }
+
+  static Future<bool> isAllowed({
+    /// In hex
+    /// Prefer to initialize PlayLicensing.salt in native
+    String? salt,
+
+    /// In base64
+    String? publicKey,
+  }) async {
+    return await _channel.invokeMethod('isAllowed', {
+      'salt': salt,
+      'publicKey': publicKey,
+    });
   }
 }
