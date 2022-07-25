@@ -1,0 +1,4 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="fr.thomas.maugin.flutter_play_licensing.flutter_play_licensing">
+    <uses-permission android:name="com.android.vending.CHECK_LICENSE" />
+</manifest>
