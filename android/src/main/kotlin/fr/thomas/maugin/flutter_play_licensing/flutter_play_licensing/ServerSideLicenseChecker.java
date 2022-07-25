@@ -12,9 +12,10 @@ import android.os.RemoteException;
 import android.provider.Settings.Secure;
 import android.util.Log;
 
+import androidx.annotation.Nullable;
+
 import com.android.vending.licensing.ILicenseResultListener;
 import com.android.vending.licensing.ILicensingService;
-import com.google.android.vending.licensing.NullDeviceLimiter;
 import com.google.android.vending.licensing.Policy;
 import com.google.android.vending.licensing.util.Base64;
 import com.google.android.vending.licensing.util.Base64DecoderException;
@@ -64,8 +65,8 @@ public class ServerSideLicenseChecker implements ServiceConnection {
     private final Handler mHandler;
     private final String mPackageName;
     private final String mVersionCode;
-    private final Set<ServerSideLicenseValidator> mChecksInProgress = new HashSet<ServerSideLicenseValidator>();
-    private final Queue<ServerSideLicenseValidator> mPendingChecks = new LinkedList<ServerSideLicenseValidator>();
+    private final Set<ServerSideLicenseValidator> mChecksInProgress = new HashSet<>();
+    private final Queue<ServerSideLicenseValidator> mPendingChecks = new LinkedList<>();
 
     /**
      * @param context          a Context
@@ -118,12 +119,11 @@ public class ServerSideLicenseChecker implements ServiceConnection {
      *
      * @param callback
      */
-    public synchronized void serverSideCheck(ServerSideLicenseCheckerCallback callback) {
+    public synchronized void serverSideCheck(Integer nonce, ServerSideLicenseCheckerCallback callback) {
         // If we have a valid recent LICENSED response, we can skip asking
         // Market.
 
-        ServerSideLicenseValidator validator = new ServerSideLicenseValidator(new NullDeviceLimiter(),
-                callback, generateNonce(), mPackageName, mVersionCode);
+        ServerSideLicenseValidator validator = new ServerSideLicenseValidator(callback, nonce != null ? nonce : generateNonce(), mPackageName, mVersionCode);
 
         if (mService == null) {
             Log.i(TAG, "Binding to licensing service.");
@@ -200,16 +200,14 @@ public class ServerSideLicenseChecker implements ServiceConnection {
 
     private class ResultListener extends ILicenseResultListener.Stub {
         private final ServerSideLicenseValidator mValidator;
-        private Runnable mOnTimeout;
+        private final Runnable mOnTimeout;
 
         public ResultListener(ServerSideLicenseValidator validator) {
             mValidator = validator;
-            mOnTimeout = new Runnable() {
-                public void run() {
-                    Log.i(TAG, "Check timed out.");
-                    handleServiceConnectionError(mValidator);
-                    finishCheck(mValidator);
-                }
+            mOnTimeout = () -> {
+                Log.i(TAG, "Check timed out.");
+                handleServiceConnectionError(mValidator);
+                finishCheck(mValidator);
             };
             startTimeout();
         }
@@ -222,46 +220,44 @@ public class ServerSideLicenseChecker implements ServiceConnection {
         // either this or the timeout runs.
         public void verifyLicense(final int responseCode, final String signedData,
                                   final String signature) {
-            mHandler.post(new Runnable() {
-                public void run() {
-                    Log.i(TAG, "Received response.");
-                    // Make sure it hasn't already timed out.
-                    if (mChecksInProgress.contains(mValidator)) {
-                        clearTimeout();
-                        mValidator.verify(mPublicKey, responseCode, signedData, signature);
-                        finishCheck(mValidator);
-                    }
-                    if (DEBUG_LICENSE_ERROR) {
-                        boolean logResponse;
-                        String stringError = null;
-                        switch (responseCode) {
-                            case ERROR_CONTACTING_SERVER:
-                                logResponse = true;
-                                stringError = "ERROR_CONTACTING_SERVER";
-                                break;
-                            case ERROR_INVALID_PACKAGE_NAME:
-                                logResponse = true;
-                                stringError = "ERROR_INVALID_PACKAGE_NAME";
-                                break;
-                            case ERROR_NON_MATCHING_UID:
-                                logResponse = true;
-                                stringError = "ERROR_NON_MATCHING_UID";
-                                break;
-                            default:
-                                logResponse = false;
-                        }
-
-                        if (logResponse) {
-                            String android_id = Secure.getString(mContext.getContentResolver(),
-                                    Secure.ANDROID_ID);
-                            Date date = new Date();
-                            Log.d(TAG, "Server Failure: " + stringError);
-                            Log.d(TAG, "Android ID: " + android_id);
-                            Log.d(TAG, "Time: " + date.toGMTString());
-                        }
-                    }
-
+            mHandler.post(() -> {
+                Log.i(TAG, "Received response.");
+                // Make sure it hasn't already timed out.
+                if (mChecksInProgress.contains(mValidator)) {
+                    clearTimeout();
+                    mValidator.verify(mPublicKey, responseCode, signedData, signature);
+                    finishCheck(mValidator);
                 }
+                if (DEBUG_LICENSE_ERROR) {
+                    boolean logResponse;
+                    String stringError = null;
+                    switch (responseCode) {
+                        case ERROR_CONTACTING_SERVER:
+                            logResponse = true;
+                            stringError = "ERROR_CONTACTING_SERVER";
+                            break;
+                        case ERROR_INVALID_PACKAGE_NAME:
+                            logResponse = true;
+                            stringError = "ERROR_INVALID_PACKAGE_NAME";
+                            break;
+                        case ERROR_NON_MATCHING_UID:
+                            logResponse = true;
+                            stringError = "ERROR_NON_MATCHING_UID";
+                            break;
+                        default:
+                            logResponse = false;
+                    }
+
+                    if (logResponse) {
+                        String android_id = Secure.getString(mContext.getContentResolver(),
+                                Secure.ANDROID_ID);
+                        Date date = new Date();
+                        Log.d(TAG, "Server Failure: " + stringError);
+                        Log.d(TAG, "Android ID: " + android_id);
+                        Log.d(TAG, "Time: " + date);
+                    }
+                }
+
             });
         }
 

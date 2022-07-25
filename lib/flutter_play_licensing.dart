@@ -35,9 +35,11 @@ class FlutterPlayLicensing {
   static Future<Map<dynamic, dynamic>> serverSideCheck({
     /// In base64
     String? publicKey,
+    String? nonce,
   }) async {
     return await _channel.invokeMethod('serverSideCheck', {
       'publicKey': publicKey,
+      'nonce': nonce,
     });
   }
 }

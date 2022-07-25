@@ -3,8 +3,6 @@ package fr.thomas.maugin.flutter_play_licensing.flutter_play_licensing;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.google.android.vending.licensing.DeviceLimiter;
-import com.google.android.vending.licensing.Policy;
 import com.google.android.vending.licensing.ResponseData;
 import com.google.android.vending.licensing.util.Base64;
 import com.google.android.vending.licensing.util.Base64DecoderException;
@@ -34,11 +32,9 @@ class ServerSideLicenseValidator {
     private final int mNonce;
     private final String mPackageName;
     private final String mVersionCode;
-    private final DeviceLimiter mDeviceLimiter;
 
-    ServerSideLicenseValidator(DeviceLimiter deviceLimiter, ServerSideLicenseCheckerCallback callback,
+    ServerSideLicenseValidator(ServerSideLicenseCheckerCallback callback,
                                int nonce, String packageName, String versionCode) {
-        mDeviceLimiter = deviceLimiter;
         mCallback = callback;
         mNonce = nonce;
         mPackageName = packageName;
@@ -70,7 +66,7 @@ class ServerSideLicenseValidator {
     public void verify(PublicKey publicKey, int responseCode, String signedData, String signature) {
         String userId = null;
         // Skip signature check for unsuccessful requests
-        ResponseData data = null;
+        ResponseData data;
         if (responseCode == LICENSED || responseCode == NOT_LICENSED ||
                 responseCode == LICENSED_OLD_KEY) {
             // Verify signature.
@@ -150,32 +146,28 @@ class ServerSideLicenseValidator {
         switch (responseCode) {
             case LICENSED:
             case LICENSED_OLD_KEY:
-                int limiterResponse = mDeviceLimiter.isDeviceAllowed(userId);
-                handleResponse(limiterResponse, signedData);
+                handleResponse(responseCode, signedData);
                 break;
             case NOT_LICENSED:
-                handleResponse(Policy.NOT_LICENSED, signedData);
+                Log.w(TAG, "Error not licensed.");
+                handleResponse(responseCode, signedData);
                 break;
             case ERROR_CONTACTING_SERVER:
                 Log.w(TAG, "Error contacting licensing server.");
-                handleResponse(Policy.RETRY, signedData);
+                handleResponse(responseCode, signedData);
                 break;
             case ERROR_SERVER_FAILURE:
                 Log.w(TAG, "An error has occurred on the licensing server.");
-                handleResponse(Policy.RETRY, signedData);
+                handleResponse(responseCode, signedData);
                 break;
             case ERROR_OVER_QUOTA:
                 Log.w(TAG, "Licensing server is refusing to talk to this device, over quota.");
-                handleResponse(Policy.RETRY, signedData);
+                handleResponse(responseCode, signedData);
                 break;
             case ERROR_INVALID_PACKAGE_NAME:
-                handleApplicationError(ServerSideLicenseCheckerCallback.ERROR_INVALID_PACKAGE_NAME);
-                break;
             case ERROR_NON_MATCHING_UID:
-                handleApplicationError(ServerSideLicenseCheckerCallback.ERROR_NON_MATCHING_UID);
-                break;
             case ERROR_NOT_MARKET_MANAGED:
-                handleApplicationError(ServerSideLicenseCheckerCallback.ERROR_NOT_MARKET_MANAGED);
+                handleApplicationError(responseCode);
                 break;
             default:
                 Log.e(TAG, "Unknown response code for license check.");
