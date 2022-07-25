@@ -1,6 +1,6 @@
 import 'package:flutter/services.dart';
 
-class FlutterPlayLicensing {
+class FlutterPlayLicensingPlugin {
   static const MethodChannel _channel = MethodChannel('flutter_play_licensing');
 
   static Future<int> check({
