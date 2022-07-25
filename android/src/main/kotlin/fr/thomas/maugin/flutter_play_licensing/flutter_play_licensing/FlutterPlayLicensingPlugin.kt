@@ -16,6 +16,7 @@ import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
 
+
 object PlayLicensingConfig {
     val salt: ByteArray = byteArrayOf(
         -46, 65, 30, -128, -103, -57, 74, -64, 51, 88,
@@ -49,6 +50,9 @@ class FlutterPlayLicensingPlugin : FlutterPlugin, MethodCallHandler {
             "isAllowed" -> {
                 isAllowed(call, result)
             }
+            "serverSideCheck" -> {
+                serverSideCheck(call, result)
+            }
             else -> {
                 result.notImplemented()
             }
@@ -73,6 +77,15 @@ class FlutterPlayLicensingPlugin : FlutterPlugin, MethodCallHandler {
                     Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
                 )
             ),
+            publicKey ?: PlayLicensingConfig.publicKey
+        )
+    }
+
+    private fun Context.serverSideChecker(
+        publicKey: String? = null
+    ): LicenseCheckerService {
+        return LicenseCheckerService(
+            this,
             publicKey ?: PlayLicensingConfig.publicKey
         )
     }
@@ -147,6 +160,32 @@ class FlutterPlayLicensingPlugin : FlutterPlugin, MethodCallHandler {
                     result.onMain().errors(errorCode.toString(), details = errorCode)
                 }
             )
+        } ?: result.notImplemented()
+    }
+
+    private fun serverSideCheck(call: MethodCall, result: Result) {
+        context?.let { context ->
+            val checker = context.serverSideChecker(
+                call.argument<String>("publicKey")
+            )
+            checker.serverSideCheck(object : ServerSideLicenseCheckerCallback {
+                override fun response(reason: Int, rawData: String) {
+                    result.onMain().success(object : HashMap<String?, Any?>() {
+                        init {
+                            put("reason", reason)
+                            put("rawData", rawData)
+                        }
+                    })
+                }
+
+                override fun applicationError(errorCode: Int) {
+                    result.onMain().errors(
+                        errorCode.toString(),
+                        errorCode.toString(),
+                        details = errorCode
+                    )
+                }
+            })
         } ?: result.notImplemented()
     }
 }

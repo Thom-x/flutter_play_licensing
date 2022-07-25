@@ -31,4 +31,13 @@ class FlutterPlayLicensing {
       'publicKey': publicKey,
     });
   }
+
+  static Future<Map<dynamic, dynamic>> serverSideCheck({
+    /// In base64
+    String? publicKey,
+  }) async {
+    return await _channel.invokeMethod('serverSideCheck', {
+      'publicKey': publicKey,
+    });
+  }
 }
