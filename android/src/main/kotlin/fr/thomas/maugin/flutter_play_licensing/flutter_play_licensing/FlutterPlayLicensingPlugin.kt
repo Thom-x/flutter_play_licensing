@@ -83,8 +83,8 @@ class FlutterPlayLicensingPlugin : FlutterPlugin, MethodCallHandler {
 
     private fun Context.serverSideChecker(
         publicKey: String? = null
-    ): LicenseCheckerService {
-        return LicenseCheckerService(
+    ): ServerSideLicenseChecker {
+        return ServerSideLicenseChecker(
             this,
             publicKey ?: PlayLicensingConfig.publicKey
         )

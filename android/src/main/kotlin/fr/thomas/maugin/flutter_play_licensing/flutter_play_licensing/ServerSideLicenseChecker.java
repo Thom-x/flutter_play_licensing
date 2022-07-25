@@ -42,7 +42,7 @@ import java.util.Set;
  * Must also provide the Base64-encoded RSA public key associated with your developer account. The
  * public key is obtainable from the publisher site.
  */
-public class LicenseCheckerService implements ServiceConnection {
+public class ServerSideLicenseChecker implements ServiceConnection {
     private static final String TAG = "LicenseChecker";
 
     private static final String KEY_FACTORY_ALGORITHM = "RSA";
@@ -64,15 +64,15 @@ public class LicenseCheckerService implements ServiceConnection {
     private final Handler mHandler;
     private final String mPackageName;
     private final String mVersionCode;
-    private final Set<LicenseValidator> mChecksInProgress = new HashSet<LicenseValidator>();
-    private final Queue<LicenseValidator> mPendingChecks = new LinkedList<LicenseValidator>();
+    private final Set<ServerSideLicenseValidator> mChecksInProgress = new HashSet<ServerSideLicenseValidator>();
+    private final Queue<ServerSideLicenseValidator> mPendingChecks = new LinkedList<ServerSideLicenseValidator>();
 
     /**
      * @param context          a Context
      * @param encodedPublicKey Base64-encoded RSA public key
      * @throws IllegalArgumentException if encodedPublicKey is invalid
      */
-    public LicenseCheckerService(Context context, String encodedPublicKey) {
+    public ServerSideLicenseChecker(Context context, String encodedPublicKey) {
         mContext = context;
         mPublicKey = generatePublicKey(encodedPublicKey);
         mPackageName = mContext.getPackageName();
@@ -122,7 +122,7 @@ public class LicenseCheckerService implements ServiceConnection {
         // If we have a valid recent LICENSED response, we can skip asking
         // Market.
 
-        LicenseValidator validator = new LicenseValidator(new NullDeviceLimiter(),
+        ServerSideLicenseValidator validator = new ServerSideLicenseValidator(new NullDeviceLimiter(),
                 callback, generateNonce(), mPackageName, mVersionCode);
 
         if (mService == null) {
@@ -176,7 +176,7 @@ public class LicenseCheckerService implements ServiceConnection {
     }
 
     private void runChecks() {
-        LicenseValidator validator;
+        ServerSideLicenseValidator validator;
         while ((validator = mPendingChecks.poll()) != null) {
             try {
                 Log.i(TAG, "Calling checkLicense on service for " + validator.getPackageName());
@@ -191,7 +191,7 @@ public class LicenseCheckerService implements ServiceConnection {
         }
     }
 
-    private synchronized void finishCheck(LicenseValidator validator) {
+    private synchronized void finishCheck(ServerSideLicenseValidator validator) {
         mChecksInProgress.remove(validator);
         if (mChecksInProgress.isEmpty()) {
             cleanupService();
@@ -199,10 +199,10 @@ public class LicenseCheckerService implements ServiceConnection {
     }
 
     private class ResultListener extends ILicenseResultListener.Stub {
-        private final LicenseValidator mValidator;
+        private final ServerSideLicenseValidator mValidator;
         private Runnable mOnTimeout;
 
-        public ResultListener(LicenseValidator validator) {
+        public ResultListener(ServerSideLicenseValidator validator) {
             mValidator = validator;
             mOnTimeout = new Runnable() {
                 public void run() {
@@ -293,7 +293,7 @@ public class LicenseCheckerService implements ServiceConnection {
      * Generates policy response for service connection errors, as a result of disconnections or
      * timeouts.
      */
-    private synchronized void handleServiceConnectionError(LicenseValidator validator) {
+    private synchronized void handleServiceConnectionError(ServerSideLicenseValidator validator) {
         validator.getCallback().applicationError(ServerSideLicenseCheckerCallback.ERROR_CONNECTION_ERROR);
     }
 

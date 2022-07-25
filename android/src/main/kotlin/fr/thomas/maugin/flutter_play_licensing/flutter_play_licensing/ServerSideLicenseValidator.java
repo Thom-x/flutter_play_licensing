@@ -15,7 +15,7 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
 
-class LicenseValidator {
+class ServerSideLicenseValidator {
     private static final String TAG = "LicenseValidator";
 
     // Server response codes.
@@ -36,8 +36,8 @@ class LicenseValidator {
     private final String mVersionCode;
     private final DeviceLimiter mDeviceLimiter;
 
-    LicenseValidator(DeviceLimiter deviceLimiter, ServerSideLicenseCheckerCallback callback,
-                     int nonce, String packageName, String versionCode) {
+    ServerSideLicenseValidator(DeviceLimiter deviceLimiter, ServerSideLicenseCheckerCallback callback,
+                               int nonce, String packageName, String versionCode) {
         mDeviceLimiter = deviceLimiter;
         mCallback = callback;
         mNonce = nonce;
