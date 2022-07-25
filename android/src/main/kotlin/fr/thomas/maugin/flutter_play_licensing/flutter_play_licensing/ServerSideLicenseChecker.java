@@ -1,5 +1,6 @@
 package fr.thomas.maugin.flutter_play_licensing.flutter_play_licensing;
 
+import android.annotation.SuppressLint;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -12,11 +13,8 @@ import android.os.RemoteException;
 import android.provider.Settings.Secure;
 import android.util.Log;
 
-import androidx.annotation.Nullable;
-
 import com.android.vending.licensing.ILicenseResultListener;
 import com.android.vending.licensing.ILicensingService;
-import com.google.android.vending.licensing.Policy;
 import com.google.android.vending.licensing.util.Base64;
 import com.google.android.vending.licensing.util.Base64DecoderException;
 
@@ -34,12 +32,6 @@ import java.util.Set;
 
 /**
  * Client library for Google Play license verifications.
- * <p>
- * The LicenseChecker is configured via a {@link Policy} which contains the logic to determine
- * whether a user should have access to the application. For example, the Policy can define a
- * threshold for allowable number of server or client failures before the library reports the user
- * as not having access.
- * <p>
  * Must also provide the Base64-encoded RSA public key associated with your developer account. The
  * public key is obtainable from the publisher site.
  */
@@ -249,7 +241,7 @@ public class ServerSideLicenseChecker implements ServiceConnection {
                     }
 
                     if (logResponse) {
-                        String android_id = Secure.getString(mContext.getContentResolver(),
+                        @SuppressLint("HardwareIds") String android_id = Secure.getString(mContext.getContentResolver(),
                                 Secure.ANDROID_ID);
                         Date date = new Date();
                         Log.d(TAG, "Server Failure: " + stringError);
