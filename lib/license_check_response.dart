@@ -15,7 +15,7 @@ class LicenseCheckResponse {
     }
   }
 
-  LicenseCheckResponse.fromJson(Map<Object, Object> json) {
+  LicenseCheckResponse.fromJson(Map<Object?, Object?> json) {
     reason = json['reason'] as int?;
     rawData = json['rawData'] as String?;
     signature = json['signature'] as String?;
