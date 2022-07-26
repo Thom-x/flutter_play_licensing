@@ -15,10 +15,10 @@ class LicenseCheckResponse {
     }
   }
 
-  LicenseCheckResponse.fromJson(Map<String, dynamic> json) {
-    reason = json['reason'];
-    rawData = json['rawData'];
-    signature = json['signature'];
+  LicenseCheckResponse.fromJson(Map<Object, Object> json) {
+    reason = json['reason'] as int?;
+    rawData = json['rawData'] as String?;
+    signature = json['signature'] as String?;
   }
 
   Map<String, dynamic> toJson() {
