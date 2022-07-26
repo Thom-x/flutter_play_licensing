@@ -146,27 +146,34 @@ class ServerSideLicenseValidator {
         switch (responseCode) {
             case LICENSED:
             case LICENSED_OLD_KEY:
-                handleResponse(responseCode, signedData);
+                handleResponse(responseCode, signedData, signature);
                 break;
             case NOT_LICENSED:
                 Log.w(TAG, "Error not licensed.");
-                handleResponse(responseCode, signedData);
+                handleApplicationError(responseCode);
                 break;
             case ERROR_CONTACTING_SERVER:
                 Log.w(TAG, "Error contacting licensing server.");
-                handleResponse(responseCode, signedData);
+                handleApplicationError(responseCode);
                 break;
             case ERROR_SERVER_FAILURE:
                 Log.w(TAG, "An error has occurred on the licensing server.");
-                handleResponse(responseCode, signedData);
+                handleApplicationError(responseCode);
                 break;
             case ERROR_OVER_QUOTA:
                 Log.w(TAG, "Licensing server is refusing to talk to this device, over quota.");
-                handleResponse(responseCode, signedData);
+                handleApplicationError(responseCode);
                 break;
             case ERROR_INVALID_PACKAGE_NAME:
+                Log.w(TAG, "Invalid package name.");
+                handleApplicationError(responseCode);
+                break;
             case ERROR_NON_MATCHING_UID:
+                Log.w(TAG, "Non matching UID.");
+                handleApplicationError(responseCode);
+                break;
             case ERROR_NOT_MARKET_MANAGED:
+                Log.w(TAG, "Not market managed");
                 handleApplicationError(responseCode);
                 break;
             default:
@@ -180,9 +187,10 @@ class ServerSideLicenseValidator {
      *
      * @param response
      * @param rawData
+     * @param signature
      */
-    private void handleResponse(int response, String rawData) {
-        mCallback.response(response, rawData);
+    private void handleResponse(int response, String rawData, String signature) {
+        mCallback.response(response, rawData, signature);
     }
 
     private void handleApplicationError(int code) {

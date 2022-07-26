@@ -169,11 +169,16 @@ class FlutterPlayLicensingPlugin : FlutterPlugin, MethodCallHandler {
                 call.argument<String>("publicKey")
             )
             checker.serverSideCheck(call.argument("nonce"), object : ServerSideLicenseCheckerCallback {
-                override fun response(reason: Int, rawData: String) {
+                override fun response(
+                    reason: Int,
+                    rawData: String,
+                    signature: String
+                ) {
                     result.onMain().success(object : HashMap<String?, Any?>() {
                         init {
                             put("reason", reason)
                             put("rawData", rawData)
+                            put("signature", signature)
                         }
                     })
                 }

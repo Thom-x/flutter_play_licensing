@@ -1,7 +1,5 @@
 package fr.thomas.maugin.flutter_play_licensing.flutter_play_licensing;
 
-import com.google.android.vending.licensing.ResponseData;
-
 /**
  * Callback for the license checker library.
  * <b>The callback does not occur in the original checking thread.</b> Your
@@ -21,8 +19,9 @@ public interface ServerSideLicenseCheckerCallback {
      *
      * @param reason Policy.LICENSED or Policy.RETRY typically. (although in
      *            theory the policy can return Policy.NOT_LICENSED here as well)
+     * @param signature
      */
-    public void response(int reason, String rawData);
+    public void response(int reason, String rawData, String signature);
 
     /** Application error codes. */
     public static final int ERROR_INVALID_PACKAGE_NAME = 1;
