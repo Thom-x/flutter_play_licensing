@@ -1,5 +1,7 @@
 import 'package:flutter/services.dart';
 
+import 'license_check_response.dart';
+
 class FlutterPlayLicensing {
   static const MethodChannel _channel = MethodChannel('flutter_play_licensing');
 
@@ -32,14 +34,15 @@ class FlutterPlayLicensing {
     });
   }
 
-  static Future<Map<dynamic, dynamic>> serverSideCheck({
+  static Future<LicenseCheckResponse> serverSideCheck({
     /// In base64
     String? publicKey,
     int? nonce,
   }) async {
-    return await _channel.invokeMethod('serverSideCheck', {
+    var response = await _channel.invokeMethod('serverSideCheck', {
       'publicKey': publicKey,
       'nonce': nonce,
     });
+    return LicenseCheckResponse.fromJson(response);
   }
 }
