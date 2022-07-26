@@ -64,9 +64,7 @@ class ServerSideLicenseValidator {
      * @param signature    server signature
      */
     public void verify(PublicKey publicKey, int responseCode, String signedData, String signature) {
-        String userId = null;
         // Skip signature check for unsuccessful requests
-        ResponseData data;
         if (responseCode == LICENSED || responseCode == NOT_LICENSED ||
                 responseCode == LICENSED_OLD_KEY) {
             // Verify signature.
@@ -102,6 +100,7 @@ class ServerSideLicenseValidator {
             }
 
             // Parse and validate response.
+            final ResponseData data;
             try {
                 data = ResponseData.parse(signedData);
             } catch (IllegalArgumentException e) {
@@ -135,7 +134,7 @@ class ServerSideLicenseValidator {
             }
 
             // Application-specific user identifier.
-            userId = data.userId;
+            final String userId = data.userId;
             if (TextUtils.isEmpty(userId)) {
                 Log.e(TAG, "User identifier is empty.");
                 handleInvalidResponse();
