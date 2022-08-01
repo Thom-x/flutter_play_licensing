@@ -3,6 +3,17 @@ import 'package:flutter/services.dart';
 import 'license_check_response.dart';
 
 class FlutterPlayLicensing {
+
+  static const String errorInvalidPackageName = "1";
+  static const String errorNonMatchingUid = "2";
+  static const String errorNotMarketManaged = "3";
+  static const String errorCheckInProgress = "4";
+  static const String errorInvalidPublicKey = "5";
+  static const String errorMissingPermission = "6";
+  static const String errorConnectionError = "7";
+  static const String errorInvalidResponse = "8";
+  static const String unknownError = "99";
+
   static const MethodChannel _channel = MethodChannel('flutter_play_licensing');
 
   static Future<int> check({
